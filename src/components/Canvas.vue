@@ -15,46 +15,50 @@
   
   onMounted(() => {
     fabricCanvas = new fabric.Canvas('c1');
-
+    
+    // 吸附的阈值，定义接近该值范围内触发吸附逻辑
     const snapThreshold = 10;
   
     // 创建辅助线
     const createLine = (options) =>
       new fabric.Line([0, 0, 0, 0], {
-        stroke: 'blue',
-        strokeWidth: 1,
-        selectable: false,
-        evented: false,
-        visible: false,
+        stroke: 'blue', // 辅助线的颜色
+        strokeWidth: 1, // 辅助线的宽度
+        selectable: false, // 禁止用户选择辅助线
+        evented: false, // 禁止辅助线触发事件
+        visible: false, // 默认隐藏辅助线
         ...options,
       });
-  
+      
+    // 水平辅助线
     const horizontalLine = createLine();
+    // 垂直辅助线
     const verticalLine = createLine();
-  
+    // 将辅助线添加到画布中，但默认不可见
     fabricCanvas.add(horizontalLine, verticalLine);
   
-    // 吸附计算函数
+    // 计算吸附位置
     const calculateSnap = (value, targets) => {
       for (const target of targets) {
+        // 如果当前值与目标值的距离小于吸附阈值，返回目标值（吸附点）
         if (Math.abs(value - target) < snapThreshold) {
           return target;
         }
       }
-      return null;
+      return null; // 不满足吸附条件时，返回 null
     };
   
-    // 拖动事件处理
+    // 为画布对象绑定拖动事件，用于在对象移动时动态显示辅助线
     fabricCanvas.on('object:moving', (e) => {
-      const obj = e.target;
-      const boundingBox = obj.getBoundingRect();
-      const centerX = boundingBox.left + boundingBox.width / 2;
-      const centerY = boundingBox.top + boundingBox.height / 2;
-  
+      const obj = e.target; // 获取被拖动的对象
+      const boundingBox = obj.getBoundingRect(); // 获取对象的边界框信息
+      const centerX = boundingBox.left + boundingBox.width / 2; // 计算对象的中心点X坐标
+      const centerY = boundingBox.top + boundingBox.height / 2; // 计算对象的中心点Y坐标
+      // 计算对象在X和Y轴的吸附点（如果有）
       const snapX = calculateSnap(centerX, [0, fabricCanvas.width / 2, fabricCanvas.width]);
       const snapY = calculateSnap(centerY, [0, fabricCanvas.height / 2, fabricCanvas.height]);
   
-      // 显示或隐藏辅助线
+      // 如果存在吸附点，更新辅助线的位置和可见性；否则隐藏辅助线
       if (snapX !== null) {
         verticalLine.set({
           x1: snapX,
@@ -78,7 +82,7 @@
       } else {
         horizontalLine.set({ visible: false });
       }
-  
+      // 渲染画布，更新辅助线的显示
       fabricCanvas.renderAll();
     });
   
